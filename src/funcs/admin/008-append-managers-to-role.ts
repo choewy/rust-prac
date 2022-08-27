@@ -15,7 +15,7 @@ export const appendManagersToRole = async (
   let managers = await managerRepository.find({
     relations: { roles: true },
     where: {
-      name: In([
+      account: In([
         'createManagers100(11)',
         'createManagers100(12)',
         'createManagers100(13)',
