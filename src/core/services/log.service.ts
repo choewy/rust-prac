@@ -35,8 +35,8 @@ export class LogService {
     data: any,
   ): Promise<void> {
     if (data) {
-      const path = `${this.logDirs[type].success}/${time}-(${row})${name}.json`;
-      fs.writeFileSync(path, JSON.stringify(data));
+      const path = `${this.logDirs[type].success}/${time} - (${row})${name}.json`;
+      fs.writeFileSync(path, JSON.stringify(data, null, 2));
     }
   }
 
@@ -47,7 +47,7 @@ export class LogService {
     time: string,
     error: unknown,
   ): Promise<void> {
-    const path = `${this.logDirs[type].error}/${time}-(${row})${name}.json`;
-    fs.writeFileSync(path, JSON.stringify(error));
+    const path = `${this.logDirs[type].error}/${time} - (${row})${name}.json`;
+    fs.writeFileSync(path, JSON.stringify(error, null, 2));
   }
 }
