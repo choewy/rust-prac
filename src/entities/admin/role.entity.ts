@@ -58,6 +58,5 @@ export class Role extends TimeStamp {
   @ManyToMany(() => Manager, (entity) => entity.roles, {
     onDelete: 'CASCADE',
   })
-  @JoinTable()
   managers: Manager[];
 }
