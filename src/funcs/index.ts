@@ -1,1 +1,1 @@
-export * as AdminTestFunctions from './admin.functions';
+export * as AdminTestFunctions from './admin';
