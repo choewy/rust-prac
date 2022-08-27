@@ -1,6 +1,12 @@
+export type Dirs = {
+  top: string;
+  success: string;
+  error: string;
+};
+
 export type LogDirs = {
-  admin: string;
-  service: string;
+  admin: Dirs;
+  client: Dirs;
 };
 
 export type TestTypes = keyof LogDirs;

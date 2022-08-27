@@ -4,33 +4,26 @@ import * as fs from 'fs';
 
 @Injectable()
 export class LogService {
-  private logDirs: LogDirs & { root: string } = {
-    root: process.cwd() + '/logs',
-    admin: process.cwd() + '/logs/admin',
-    service: process.cwd() + '/logs/service',
+  private readonly rootDir: string = process.cwd() + '/logs';
+  private readonly logDirs: LogDirs = {
+    admin: {
+      top: this.rootDir + '/admin',
+      success: this.rootDir + '/admin/success',
+      error: this.rootDir + '/admin/error',
+    },
+    client: {
+      top: this.rootDir + '/client',
+      success: this.rootDir + '/client/success',
+      error: this.rootDir + '/client/error',
+    },
   };
 
-  private readonly successLogDirs: LogDirs = {
-    admin: this.logDirs.admin + '/success',
-    service: this.logDirs.service + '/success',
-  };
-
-  private readonly errorLogDirs: LogDirs = {
-    admin: this.logDirs.admin + '/error',
-    service: this.logDirs.service + '/error',
-  };
-
-  async makeLogDirs(): Promise<void> {
-    Object.values(this.logDirs).forEach((dir) => {
-      !fs.existsSync(dir) && fs.mkdirSync(dir);
-    });
-
-    Object.values(this.successLogDirs).forEach((dir) => {
-      !fs.existsSync(dir) && fs.mkdirSync(dir);
-    });
-
-    Object.values(this.errorLogDirs).forEach((dir) => {
-      !fs.existsSync(dir) && fs.mkdirSync(dir);
+  async initialize(type: TestTypes) {
+    const dirs = this.logDirs[type];
+    !fs.existsSync(this.rootDir) && fs.mkdirSync(this.rootDir);
+    fs.existsSync(dirs.top) && fs.rmSync(dirs.top, { recursive: true });
+    Object.values(dirs).forEach((dir) => {
+      fs.mkdirSync(dir);
     });
   }
 
@@ -42,7 +35,7 @@ export class LogService {
     data: any,
   ): Promise<void> {
     if (data) {
-      const path = `${this.successLogDirs[type]}/${time}-(${row})${name}.json`;
+      const path = `${this.logDirs[type].success}/${time}-(${row})${name}.json`;
       fs.writeFileSync(path, JSON.stringify(data));
     }
   }
@@ -54,7 +47,7 @@ export class LogService {
     time: string,
     error: unknown,
   ): Promise<void> {
-    const path = `${this.errorLogDirs[type]}/${time}-(${row})${name}.json`;
+    const path = `${this.logDirs[type].error}/${time}-(${row})${name}.json`;
     fs.writeFileSync(path, JSON.stringify(error));
   }
 }
