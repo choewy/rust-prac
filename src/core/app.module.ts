@@ -16,15 +16,12 @@ export class AppModule {
 
   constructor(
     private readonly dataSource: DataSource,
-    private readonly logService: LogService,
     private readonly testingService: TestingService,
   ) {
     this.testAdminFunctions();
   }
 
   async testAdminFunctions() {
-    this.logService.makeLogDirs();
-
     const repositories: AdminRepositories = {
       managerRepository: this.dataSource.manager.getRepository(Manager),
       roleRepository: this.dataSource.manager.getRepository(Role),
