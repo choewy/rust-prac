@@ -1,7 +1,7 @@
 import { Manager, Role } from '@/entities/admin';
-import { LogService } from '@/testing';
-import { AdminTestFunctions } from '@/testing/targets';
-import { TestingService } from '@/testing/testing.service';
+import { LogService } from '@/core/services';
+import { AdminTestFunctions } from '@/funcs';
+import { TestingService } from '@/core/services';
 import { Logger, Module } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { ConfigsRootModule, TypeOrmRootSyncModule } from './modules';
