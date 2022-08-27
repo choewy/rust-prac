@@ -1,28 +1,60 @@
 import { Injectable } from '@nestjs/common';
-import { LogDirs } from './types';
+import { LogDirs, TestTypes } from './types';
 import * as fs from 'fs';
 
 @Injectable()
 export class LogService {
-  private readonly logDirs: LogDirs = {
+  private logDirs: LogDirs & { root: string } = {
     root: process.cwd() + '/logs',
     admin: process.cwd() + '/logs/admin',
     service: process.cwd() + '/logs/service',
   };
 
-  makeLogDirs(): void {
+  private readonly successLogDirs: LogDirs = {
+    admin: this.logDirs.admin + '/success',
+    service: this.logDirs.service + '/success',
+  };
+
+  private readonly errorLogDirs: LogDirs = {
+    admin: this.logDirs.admin + '/error',
+    service: this.logDirs.service + '/error',
+  };
+
+  async makeLogDirs(): Promise<void> {
     Object.values(this.logDirs).forEach((dir) => {
+      !fs.existsSync(dir) && fs.mkdirSync(dir);
+    });
+
+    Object.values(this.successLogDirs).forEach((dir) => {
+      !fs.existsSync(dir) && fs.mkdirSync(dir);
+    });
+
+    Object.values(this.errorLogDirs).forEach((dir) => {
       !fs.existsSync(dir) && fs.mkdirSync(dir);
     });
   }
 
-  writeLogfile(
-    type: keyof LogDirs,
+  async writeSuccessLog(
+    type: TestTypes,
+    row: number,
+    name: string,
+    time: string,
+    data: any,
+  ): Promise<void> {
+    if (data) {
+      const path = `${this.successLogDirs[type]}/${time}-(${row})${name}.json`;
+      fs.writeFileSync(path, JSON.stringify(data));
+    }
+  }
+
+  async writeErrorLog(
+    type: TestTypes,
+    row: number,
     name: string,
     time: string,
     error: unknown,
-  ): void {
-    const path = `${this.logDirs[type]}/${time}-${name}.json`;
+  ): Promise<void> {
+    const path = `${this.errorLogDirs[type]}/${time}-(${row})${name}.json`;
     fs.writeFileSync(path, JSON.stringify(error));
   }
 }
