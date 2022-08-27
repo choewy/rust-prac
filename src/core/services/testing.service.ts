@@ -20,10 +20,13 @@ export class TestingService {
       })
       .sort((current, next) => next.length - current.length);
 
+    this.logger.verbose(`[TestingService] database tables initializing...`);
     for (const tableName of tableNames) {
-      const query = `DELETE FROM ${tableName};`;
-      await dataSource.query(query);
+      await dataSource.query(`DELETE FROM ${tableName};`);
+      await dataSource.query(`ALTER TABLE ${tableName} AUTO_INCREMENT=1;`);
+      this.logger.log(`[${tableName}] complete initialized`);
     }
+    this.logger.verbose(`[TestingService] complete initialized`);
   }
 
   constructor(private readonly logService: LogService) {}
@@ -34,17 +37,21 @@ export class TestingService {
     repositories: AdminRepositories,
     testObject: TestFuncObject,
   ): Promise<number> {
-    await this.logService.makeLogDirs();
+    await this.logService.initialize(type);
     await this.initializeTables(dataSource);
 
     let errorCount = 0;
+    const typeName = `Test${type.charAt(0).toUpperCase()}${type.slice(1)}`;
     const targets = Object.entries(testObject);
 
+    this.logger.verbose(`[${typeName}] start testing...`);
+
     for (const i in targets) {
+      let data: any;
+      let result: string = 'success';
+
       const row = Number(i);
       const [name, func] = targets[row];
-      const time = new Date().toLocaleString();
-      const message = `${time} - (${row + 1})${type}(${name})`;
 
       const queryRunner = dataSource.createQueryRunner();
       await queryRunner.connect();
@@ -52,23 +59,38 @@ export class TestingService {
 
       try {
         const args = getArgumentNames(func).map((arg) => repositories[arg]);
-        const data = await func(...args);
+        data = await func(...args);
         await queryRunner.commitTransaction();
-        await this.logService.writeSuccessLog(type, row + 1, name, time, data);
-        this.logger.log(`[success] ${message}`);
       } catch (error) {
-        await queryRunner.rollbackTransaction();
-        await this.logService.writeErrorLog(type, row + 1, name, time, {
-          ...error,
-          stack: error.stack,
-        });
-        this.logger.error(`[error] ${message}`);
+        result = 'error';
         errorCount += 1;
+        data = { ...error, stack: error.stack };
+        await queryRunner.rollbackTransaction();
       } finally {
         await queryRunner.release();
       }
-    }
 
+      const time = new Date().toLocaleString();
+      const message = `${time} - (${row + 1})${type}(${name})`;
+
+      result === 'error'
+        ? await this.logService.writeErrorLog(type, row + 1, name, time, data)
+        : await this.logService.writeSuccessLog(
+            type,
+            row + 1,
+            name,
+            time,
+            data,
+          );
+
+      this.logger.log(`[${result}] ${message}`);
+    }
+    const totalCount = targets.length;
+    const successCount = totalCount - errorCount;
+
+    this.logger.verbose(
+      `[${typeName}] total: ${totalCount} | success: ${successCount} | error: ${errorCount}`,
+    );
     return errorCount;
   }
 }

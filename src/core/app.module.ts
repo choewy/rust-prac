@@ -1,8 +1,8 @@
+import { Module } from '@nestjs/common';
 import { Manager, Role } from '@/entities/admin';
 import { LogService } from '@/core/services';
-import { AdminTestFunctions } from '@/funcs';
+import { adminTestFunctions } from '@/funcs';
 import { TestingService } from '@/core/services';
-import { Logger, Module } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { ConfigsRootModule, TypeOrmRootSyncModule } from './modules';
 import { AdminRepositories } from './types';
@@ -12,8 +12,6 @@ import { AdminRepositories } from './types';
   providers: [LogService, TestingService],
 })
 export class AppModule {
-  private readonly logger = new Logger();
-
   constructor(
     private readonly dataSource: DataSource,
     private readonly testingService: TestingService,
@@ -27,13 +25,11 @@ export class AppModule {
       roleRepository: this.dataSource.manager.getRepository(Role),
     };
 
-    const errorCount = await this.testingService.testing(
+    await this.testingService.testing(
       'admin',
       this.dataSource,
       repositories,
-      AdminTestFunctions,
+      adminTestFunctions,
     );
-
-    this.logger.verbose(`[testAdminFunctions] ${errorCount}`);
   }
 }
