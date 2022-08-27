@@ -4,6 +4,7 @@ import { TestFuncObject, TestTypes } from './types';
 import { getArgumentNames } from '@/core/helpers';
 import { LogService } from './log.service';
 import { AdminRepositories, RowDataPacket } from '../types';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class TestingService {
@@ -70,7 +71,7 @@ export class TestingService {
         await queryRunner.release();
       }
 
-      const time = new Date().toLocaleString();
+      const time = DateTime.local().toFormat('yyyy.MM.dd. HH:mm:ss:uu');
       const message = `${time} - (${row + 1})${type}(${name})`;
 
       result === 'error'
