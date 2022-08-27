@@ -1,7 +1,7 @@
 import {
   BeforeInsert,
-  BeforeRemove,
   BeforeUpdate,
+  BeforeSoftRemove,
   CreateDateColumn,
   DeleteDateColumn,
   UpdateDateColumn,
@@ -40,8 +40,8 @@ export class TimeStamp {
     this.updatedAt = DateTime.local();
   }
 
-  @BeforeRemove()
-  protected beforeRemove() {
+  @BeforeSoftRemove()
+  protected beforeSoftRemove() {
     this.deletedAt = DateTime.local();
   }
 }
