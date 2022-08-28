@@ -3,23 +3,23 @@ import { DataSource } from 'typeorm';
 import { TestFuncObject, TestTypes } from './types';
 import { getArgumentNames } from '@/core/helpers';
 import { LogService } from './log.service';
-import { AdminRepositories, RowDataPacket } from '../types';
+import { AdminRepositories, ClientRepositories, RowDataPacket } from '../types';
 import { DateTime } from 'luxon';
 
 @Injectable()
 export class TestingService {
   private readonly logger = new Logger();
 
-  private async initializeTables(dataSource: DataSource) {
+  constructor(private readonly logService: LogService) {}
+
+  async initialize(dataSource: DataSource) {
     const tableNamePackets: RowDataPacket[] = await dataSource.query(
       'SHOW TABLES;',
     );
 
-    const tableNames = tableNamePackets
-      .map((packet) => {
-        return Object.values(packet).map((tableName) => tableName)[0];
-      })
-      .sort((current, next) => next.length - current.length);
+    const tableNames = tableNamePackets.map((packet) => {
+      return Object.values(packet).map((tableName) => tableName)[0];
+    });
 
     this.logger.verbose(`[TestingService] database tables initializing...`);
     for (const tableName of tableNames) {
@@ -30,16 +30,13 @@ export class TestingService {
     this.logger.verbose(`[TestingService] complete initialized`);
   }
 
-  constructor(private readonly logService: LogService) {}
-
   async testing(
     type: TestTypes,
     dataSource: DataSource,
-    repositories: AdminRepositories,
+    repositories: AdminRepositories | ClientRepositories,
     testObject: TestFuncObject,
   ): Promise<number> {
     await this.logService.initialize(type);
-    await this.initializeTables(dataSource);
 
     let errorCount = 0;
     const typeName = `Test${type.charAt(0).toUpperCase()}${type.slice(1)}`;
@@ -84,7 +81,9 @@ export class TestingService {
             data,
           );
 
-      this.logger.log(`[${result}] ${message}`);
+      result === 'error'
+        ? this.logger.error(`[${result}] ${message}`)
+        : this.logger.log(`[${result}] ${message}`);
     }
     const totalCount = targets.length;
     const successCount = totalCount - errorCount;
